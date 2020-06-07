@@ -17,7 +17,8 @@ function clearState() {
             maples: {
                 quantity: 0,
                 diseased: 0,
-                harvested: 0
+                harvested: 0,
+                tapped: 0
             },
             nests: 0,
             trucks: 0
@@ -63,12 +64,12 @@ function runSimulation() {
         '</ul>';
 
         var report = '<br/><br/>Report:<br/><table class="table">' +
-            '<tr><th>Year</th><th>Oaks (start year)</th><th>Oaks (deseased)</th><th>Oaks (harvested)</th><th>Pines (start year)</th><th>Pines (deseased)</th><th>Pines (harvested)</th><th>Maples (start year)</th><th>Maples (deseased)</th><th>Maples (harvested)</th><th>Nests (unharvestable)</th><th>Trucks </th></tr>';
+            '<tr><th>Year</th><th>Oaks (start year)</th><th>Oaks (deseased)</th><th>Oaks (harvested)</th><th>Pines (start year)</th><th>Pines (deseased)</th><th>Pines (harvested)</th><th>Maples (start year)</th><th>Maples (deseased)</th><th>Maples (harvested)</th><th>Maples (tapped)</th><th>Nests (unharvestable)</th><th>Trucks </th></tr>';
         for (var i = 0; i < global.years.length; i++) {
             var yearStats = global.years[i];
             report += '<tr><td>' + (i + 1) + '</td><td>' + yearStats.oaks.quantity + '</td><td>' + yearStats.oaks.diseased + '</td><td>' + yearStats.oaks.harvested + '</td>' +
                                                 '<td>' + yearStats.pines.quantity + '</td><td>' + yearStats.pines.diseased + '</td><td>' + yearStats.pines.harvested + '</td>' + 
-                                                '<td>' + yearStats.maples.quantity + '</td><td>' + yearStats.maples.diseased + '</td><td>' + yearStats.maples.harvested + '</td>' +
+                                                '<td>' + yearStats.maples.quantity + '</td><td>' + yearStats.maples.diseased + '</td><td>' + yearStats.maples.harvested + '</td><td>' + yearStats.maples.tapped + '</td>' +
                                                 '<td>' + yearStats.nests + '</td>' + '<td>' + yearStats.trucks + '</td>' +
                                                 '</tr>';
         }
@@ -103,7 +104,7 @@ function treeObject(kind, age, diseased = false) {
 }
 
 function calculateTrucks(numberOfTrees, oneTruckLoad){
-    return numberOfTrees % oneTruckLoad != 0? Math.floor(numberOfTrees / oneTruckLoad) + 1 : Math.floor(numberOfTrees / oneTruckLoad);
+    return numberOfTrees % oneTruckLoad != 0? Math.ceil(numberOfTrees / oneTruckLoad) : Math.floor(numberOfTrees / oneTruckLoad);
 
 }
 
@@ -118,11 +119,17 @@ function simulateOneYear(year) {
     var pinesHarvested = 0;
     var oaksHarvested = 0;
     var couldNotHarvestDueToNest = 0;
+    var maplesTapped = 0;
 
     var healthyCount = 0;
     for (var i = 0; i < global.trees.length; i++) {
         var tree = global.trees[i];
         if (isValidTree(tree)) {
+
+            if (tree.kind == 'maple' && tree.age > 4) {
+                maplesTapped++;
+            }
+
             if (healthyCount % global.doveSize == 0) {
                 couldNotHarvestDueToNest++;
             } else {
@@ -213,6 +220,7 @@ function simulateOneYear(year) {
     global.years[year].oaks.harvested = oaksHarvested;
     global.years[year].nests = couldNotHarvestDueToNest;
     global.years[year].trucks = calculateTrucks(pinesHarvested, 35) + calculateTrucks(oaksHarvested, 15);
+    global.years[year].maples.tapped = maplesTapped;
 
 
 
@@ -250,7 +258,8 @@ function simulateOneYear(year) {
         maples: {
             quantity: yearTotalMaples,
             diseased: 0,
-            harvested: 0
+            harvested: 0,
+            tapped: 0
         },
         nests: 0,
         trucks: 0
